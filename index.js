@@ -1,14 +1,8 @@
 const TelegramBot = require("node-telegram-bot-api");
-const express = require("express");
-const cors = require("cors");
 
 const token = "5662715762:AAGO98e7vMYeHH6TR_vXn8BjItt2YQuCGyA";
-const webAppUrl = "https://9682-178-121-35-149.eu.ngrok.io/";
+const webAppUrl = "https://9069-178-121-35-149.eu.ngrok.io/";
 const bot = new TelegramBot(token, { polling: true });
-const app = express();
-
-app.use(express.json());
-app.use(cors());
 
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
@@ -19,6 +13,23 @@ bot.on("message", async (msg) => {
   }
 
   if (text === "/start") {
+    await bot.sendMessage(
+      chatId,
+      "A button will appear below, fill out the form",
+      {
+        reply_markup: {
+          keyboard: [
+            [
+              {
+                text: "Fill in the form",
+                web_app: { url: webAppUrl + "form" },
+              },
+            ],
+          ],
+        },
+      }
+    );
+
     await bot.sendMessage(chatId, "Press the button", {
       reply_markup: {
         inline_keyboard: [
@@ -47,26 +58,3 @@ bot.on("message", async (msg) => {
     }
   }
 });
-
-app.post("/web-data", async (req, res) => {
-  const { queryId, products = [], totalPrice } = req.body;
-  try {
-    await bot.answerWebAppQuery(queryId, {
-      type: "article",
-      id: queryId,
-      title: "Successful purchase",
-      input_message_content: {
-        message_text: ` Congratulations on your purchase, you have purchased an item worth ${totalPrice}, ${products
-          .map((item) => item.title)
-          .join(", ")}`,
-      },
-    });
-    return res.status(200).json({});
-  } catch (e) {
-    return res.status(500).json({});
-  }
-});
-
-const PORT = 3000;
-
-app.listen(PORT, () => console.log("server started on PORT " + PORT));
